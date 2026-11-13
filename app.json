@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Tripwire",
+    "slug": "tripwire",
+    "scheme": "tripwire",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0E0D0B",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.tripwire"
+    },
+    "android": {
+      "package": "com.example.tripwire",
+      "adaptiveIcon": {
+        "backgroundColor": "#0E0D0B",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-font",
+      "expo-background-task",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#F7B500"
+        }
+      ]
+    ]
+  }
+}

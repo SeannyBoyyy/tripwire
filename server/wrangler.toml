@@ -1,0 +1,15 @@
+name = "tripwire"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+# How often prices are checked. CoinGecko's free Demo plan allows 10,000 calls a
+# month; one call every 5 minutes is ~8,600, so this stays inside it. Use
+# "* * * * *" (every minute) if you pay for a plan or swap in another price feed.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tripwire"
+database_id = "paste-the-id-printed-by-wrangler-d1-create"
