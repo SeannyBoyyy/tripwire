@@ -18,13 +18,12 @@ import { syncBackgroundCheck, type BackgroundState } from './src/services/backgr
 import { evaluateTripwires } from './src/services/engine';
 import {
   notificationsAllowed,
-  notifyTest,
   onNotificationReceived,
   onNotificationTap,
   prepareChannel,
   requestNotifications,
 } from './src/services/notify';
-import { sendServerTest, serverConfigured, syncWithServer, type ServerState } from './src/services/sync';
+import { serverConfigured, syncWithServer, type ServerState } from './src/services/sync';
 import { ThemeProvider, useStyles, useTheme, type Palette } from './src/theme';
 import type { Coin, NewTripwire, PriceMap } from './src/domain/types';
 import { useMarket } from './src/hooks/useMarket';
@@ -116,24 +115,6 @@ function Root() {
     void reconcile();
   }, [clearTripped, reconcile]);
 
-  const onTest = useCallback(async () => {
-    if (!(await ensureAllowed())) return;
-    if (serverConfigured) {
-      try {
-        if (await sendServerTest(10)) {
-          Alert.alert(
-            'Test on its way',
-            'Your server will push a test alert in about 10 seconds. Fully close Tripwire now to prove it reaches you when the app is closed.',
-          );
-          return;
-        }
-      } catch {
-        Alert.alert('Server test failed', 'Tripwire couldn’t reach your server, so this is a local test instead.');
-      }
-    }
-    await notifyTest();
-  }, [ensureAllowed]);
-
   return (
     <View style={styles.root}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
@@ -161,7 +142,6 @@ function Root() {
             server={server}
             onRemove={onRemove}
             onClearTripped={onClearTripped}
-            onTest={onTest}
             onOpenSettings={() => void Linking.openSettings()}
           />
         </View>

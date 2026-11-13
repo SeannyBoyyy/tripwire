@@ -59,6 +59,7 @@ export function notifyTest(): Promise<string> {
     content: {
       title: 'Tripwire test',
       body: 'If you can read this, alerts will reach you.',
+      data: { test: true },
     },
     trigger: NOW,
   });
@@ -69,9 +70,16 @@ export function onNotificationTap(handler: () => void): () => void {
   return () => sub.remove();
 }
 
-export function onNotificationReceived(handler: () => void): () => void {
-  const sub = Notifications.addNotificationReceivedListener(handler);
+/** Fires when a notification lands while the app is open, with the payload it carried. */
+export function onNotificationReceived(handler: (data: Record<string, unknown>) => void): () => void {
+  const sub = Notifications.addNotificationReceivedListener((n) => handler(n.request.content.data ?? {}));
   return () => sub.remove();
+}
+
+/** True while a test notification is still in Notification Center, i.e. it arrived while the app was closed. */
+export async function testNotificationPresented(): Promise<boolean> {
+  const shown = await Notifications.getPresentedNotificationsAsync();
+  return shown.some((n) => n.request.content.data?.test === true);
 }
 
 export type PushToken = { ok: true; token: string } | { ok: false; reason: 'no-project' | 'failed' };

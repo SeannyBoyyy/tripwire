@@ -58,7 +58,14 @@ export default {
       // A short delay leaves time to fully close the app before the push lands.
       const delay = typeof delaySeconds === 'number' ? Math.min(Math.max(delaySeconds, 0), 20) : 0;
       if (delay > 0) {
-        ctx.waitUntil(sleep(delay * 1000).then(() => sendTestPush(token, fetch)));
+        ctx.waitUntil(
+          sleep(delay * 1000)
+            .then(() => sendTestPush(token, fetch))
+            .then(
+              (delivery) => console.log(JSON.stringify({ test: delivery })),
+              (error: unknown) => console.error('test push failed', String(error)),
+            ),
+        );
         return json({ scheduledIn: delay });
       }
       return json({ delivery: await sendTestPush(token, fetch) });

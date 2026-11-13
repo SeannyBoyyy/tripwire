@@ -63,10 +63,12 @@ export function syncWithServer(): Promise<SyncResult> {
   return inFlight;
 }
 
-/** Asks the server to push a test alert to this phone. Returns false when there is no token to send to. */
-export async function sendServerTest(delaySeconds: number): Promise<boolean> {
+export type TestSend = 'sent' | 'no-project' | 'no-token';
+
+/** Asks the server to push a test alert to this phone, and says why when it can't. Throws if the server errors. */
+export async function sendServerTest(delaySeconds: number): Promise<TestSend> {
   const push = await getPushToken();
-  if (!push.ok) return false;
+  if (!push.ok) return push.reason === 'no-project' ? 'no-project' : 'no-token';
   await post('/v1/test', { token: push.token, delaySeconds });
-  return true;
+  return 'sent';
 }

@@ -6,6 +6,7 @@ import { TAB_BAR_CLEARANCE, fonts, gutter, hairline, useStyles, useTheme, type P
 import type { ServerState } from '../services/sync';
 import type { PriceMap, Tripwire } from '../domain/types';
 import { Attribution } from '../components/Attribution';
+import { TestAlert } from '../components/TestAlert';
 import { Segmented } from '../components/ui';
 
 const MODES = [
@@ -23,7 +24,6 @@ type Props = {
   server: ServerState;
   onRemove: (id: string) => void;
   onClearTripped: () => void;
-  onTest: () => void;
   onOpenSettings: () => void;
 };
 
@@ -33,7 +33,8 @@ function SectionHead({ label, action, onAction }: { label: string; action?: stri
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>{label}</Text>
       {action && (
-        <Pressable onPress={onAction} hitSlop={14}>
+        <Pressable onPress={onAction} hitSlop={14}
+          style={({ pressed }) => pressed && styles.pressed}>
           <Text style={styles.action}>{action}</Text>
         </Pressable>
       )}
@@ -69,6 +70,7 @@ function ArmedRow({
         <Pressable
           onPress={() => onRemove(wire.id)}
           hitSlop={14}
+          style={({ pressed }) => pressed && styles.pressed}
           accessibilityRole="button"
           accessibilityLabel={`Disarm ${wire.symbol} tripwire`}
         >
@@ -103,6 +105,7 @@ function TrippedRow({ wire, onRemove }: { wire: Tripwire; onRemove: (id: string)
         <Pressable
           onPress={() => onRemove(wire.id)}
           hitSlop={14}
+          style={({ pressed }) => pressed && styles.pressed}
           accessibilityRole="button"
           accessibilityLabel={`Delete ${wire.symbol} tripwire`}
         >
@@ -142,9 +145,8 @@ function Coverage({
   notifications,
   background,
   server,
-  onTest,
   onOpenSettings,
-}: Pick<Props, 'notifications' | 'background' | 'server' | 'onTest' | 'onOpenSettings'> & { hasArmed: boolean }) {
+}: Pick<Props, 'notifications' | 'background' | 'server' | 'onOpenSettings'> & { hasArmed: boolean }) {
   const styles = useStyles(createStyles);
   const closed = closedLine(server, background);
 
@@ -160,13 +162,11 @@ function Coverage({
         {closed}
       </Text>
       {hasArmed && !notifications && (
-        <Pressable onPress={onOpenSettings}>
+        <Pressable onPress={onOpenSettings} style={({ pressed }) => pressed && styles.pressed}>
           <Text style={styles.warn}>NOTIFICATIONS ARE OFF — OPEN SETTINGS</Text>
         </Pressable>
       )}
-      <Pressable onPress={onTest} style={styles.testBtn} accessibilityRole="button">
-        <Text style={styles.testText}>SEND TEST ALERT</Text>
-      </Pressable>
+      <TestAlert server={server} />
     </View>
   );
 }
@@ -191,7 +191,6 @@ export function TripwiresScreen({
   server,
   onRemove,
   onClearTripped,
-  onTest,
   onOpenSettings,
 }: Props) {
   const styles = useStyles(createStyles);
@@ -234,7 +233,6 @@ export function TripwiresScreen({
         notifications={notifications}
         background={background}
         server={server}
-        onTest={onTest}
         onOpenSettings={onOpenSettings}
       />
       <AppearancePicker />
@@ -301,6 +299,5 @@ const createStyles = (c: Palette) =>
     coverLine: { fontFamily: fonts.mono, fontSize: 12, lineHeight: 18, color: c.dim },
     coverKey: { fontFamily: fonts.monoMedium, color: c.text, letterSpacing: 1 },
     warn: { fontFamily: fonts.monoMedium, fontSize: 11, letterSpacing: 1, color: c.loss, marginTop: 4 },
-    testBtn: { marginTop: 8, paddingVertical: 13, alignItems: 'center', borderWidth: hairline, borderColor: c.faint },
-    testText: { fontFamily: fonts.monoMedium, fontSize: 12, letterSpacing: 1.6, color: c.text },
+    pressed: { opacity: 0.5 },
   });
