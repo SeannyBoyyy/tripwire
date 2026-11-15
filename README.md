@@ -42,21 +42,35 @@ ask you to sign in, then writes the ID into `app.json`:
 npx eas-cli init
 ```
 
-**2. Deploy the server:**
+**2. Set up the server.** One command signs you in to Cloudflare (in your browser; a free account is fine),
+creates the database, deploys the Worker, sets its keys and writes the two `EXPO_PUBLIC_TRIPWIRE_*` lines into
+`.env` for you. It is safe to run again, and re-running keeps your existing key.
 
 ```bash
 cd server
 npm install
+npm run setup
+```
+
+<details>
+<summary>The same thing by hand</summary>
+
+```bash
 npx wrangler login
 npx wrangler d1 create tripwire          # paste the database_id it prints into wrangler.toml
 npx wrangler d1 execute tripwire --remote --file=schema.sql
+npx wrangler deploy                      # prints https://tripwire.<you>.workers.dev
 npx wrangler secret put API_KEY          # any long random string
 npx wrangler secret put COINGECKO_KEY    # optional: a free CoinGecko Demo key
-npx wrangler deploy                      # prints https://tripwire.<you>.workers.dev
 ```
 
-**3. Point the app at it.** Copy `.env.example` to `.env`, fill in the two `EXPO_PUBLIC_TRIPWIRE_*` values
-(the Worker URL and the same `API_KEY`), then restart with `npx expo start -c`.
+Then copy `.env.example` to `.env` and fill in `EXPO_PUBLIC_TRIPWIRE_API` (the Worker address) and
+`EXPO_PUBLIC_TRIPWIRE_KEY` (the same `API_KEY`). Deploy before setting secrets: `wrangler secret put` on a Worker
+that doesn't exist yet stops to ask whether to create one.
+
+</details>
+
+**3. Restart the app** with `npx expo start -c` so it picks up `.env`.
 
 **4. Prove it.** Arm a tripwire (allow notifications when asked). Open Tripwires → Coverage; it should say
 the server is connected. Tap **Send test alert**, then fully close Expo Go. A push arrives in about 10 seconds.
@@ -83,6 +97,21 @@ Things to know:
 - If registering a push token ever fails in Expo Go, the fallback is a development build, which needs an
   Apple Developer account on iOS.
 - Run the server's tests with `cd server && npm test`.
+
+## What it costs
+
+Nothing, for personal use. Everything runs on free tiers:
+
+| Piece | Free allowance | What Tripwire uses |
+| --- | --- | --- |
+| Cloudflare Workers | 100,000 requests a day, 10 ms CPU per request, 5 cron triggers per account | about 290 checks a day, plus one request a minute while the app is open |
+| Cloudflare D1 | 5 million rows read and 100,000 rows written a day | a handful of rows per check |
+| CoinGecko Demo plan | 10,000 calls a month | about 8,600 a month at one check every 5 minutes |
+| Expo account | free (needed for the project ID) | one project |
+
+Free daily limits reset at 00:00 UTC; past them Cloudflare returns errors until the reset rather than billing you.
+Limits change, so check Cloudflare's [Workers limits](https://developers.cloudflare.com/workers/platform/limits/)
+and [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/).
 
 ## How alerts work
 

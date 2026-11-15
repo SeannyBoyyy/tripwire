@@ -32,6 +32,12 @@
           "color": "#F7B500"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d467472b-c771-4626-adc5-6720579be8e2"
+      }
+    },
+    "owner": "seannyboyy"
   }
 }
