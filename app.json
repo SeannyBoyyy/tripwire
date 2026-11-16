@@ -10,10 +10,10 @@
     "backgroundColor": "#0E0D0B",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.example.tripwire"
+      "bundleIdentifier": "com.seannyboyy.tripwire"
     },
     "android": {
-      "package": "com.example.tripwire",
+      "package": "com.seannyboyy.tripwire",
       "adaptiveIcon": {
         "backgroundColor": "#0E0D0B",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -38,6 +38,12 @@
         "projectId": "d467472b-c771-4626-adc5-6720579be8e2"
       }
     },
-    "owner": "seannyboyy"
+    "owner": "seannyboyy",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d467472b-c771-4626-adc5-6720579be8e2"
+    }
   }
 }
