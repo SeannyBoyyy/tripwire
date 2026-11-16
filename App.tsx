@@ -17,6 +17,7 @@ import { TripwiresScreen } from './src/screens/TripwiresScreen';
 import { syncBackgroundCheck, type BackgroundState } from './src/services/background';
 import { evaluateTripwires } from './src/services/engine';
 import {
+  launchedFromNotification,
   notificationsAllowed,
   onNotificationReceived,
   onNotificationTap,
@@ -72,12 +73,17 @@ function Root() {
     return () => sub.remove();
   }, []);
 
-  // Keep the OS-level background job registered only while something is armed.
+  // The on-device background job is only a fallback: while the server watches, it would just double every alert.
   useEffect(() => {
-    syncBackgroundCheck(armed.length > 0).then(setBackground);
-  }, [armed.length]);
+    const serverCovers = server === 'connected' || server === 'connecting';
+    syncBackgroundCheck(armed.length > 0 && !serverCovers).then(setBackground);
+  }, [armed.length, server]);
 
-  useEffect(() => onNotificationTap(() => setTab('tripwires')), []);
+  // Tapping an alert opens Tripwires, whether the app was open or had to be launched by the tap.
+  useEffect(() => {
+    if (launchedFromNotification()) setTab('tripwires');
+    return onNotificationTap(() => setTab('tripwires'));
+  }, []);
   // A server push that lands while the app is open should update the list at once.
   useEffect(() => onNotificationReceived(() => void reconcile()), [reconcile]);
 

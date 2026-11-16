@@ -66,8 +66,22 @@ export function notifyTest(): Promise<string> {
 }
 
 export function onNotificationTap(handler: () => void): () => void {
-  const sub = Notifications.addNotificationResponseReceivedListener(handler);
+  const sub = Notifications.addNotificationResponseReceivedListener(() => {
+    Notifications.clearLastNotificationResponse();
+    handler();
+  });
   return () => sub.remove();
+}
+
+/**
+ * True when this launch was caused by tapping a notification (the app was closed).
+ * The listener above only hears taps after it is registered, so a cold start needs this.
+ * It consumes the tap, so a later restart doesn't see it again.
+ */
+export function launchedFromNotification(): boolean {
+  const tapped = Notifications.getLastNotificationResponse() !== null;
+  if (tapped) Notifications.clearLastNotificationResponse();
+  return tapped;
 }
 
 /** Fires when a notification lands while the app is open, with the payload it carried. */

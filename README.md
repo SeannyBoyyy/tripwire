@@ -92,8 +92,9 @@ Things to know:
   (`fetchPrices` in `server/src/core.ts` is the one place to change). Put the Demo key on the server only
   and leave the app keyless, so the two don't share the quota.
 - **The key in `.env` ships inside the app.** It keeps strangers from using your Worker; it isn't a real secret.
-- **Tapping the notification** opens Expo Go. Like any Expo Go project, it needs your dev server running (or a
-  published update) to load.
+- **Tapping the notification** opens Tripwire on the Tripwires tab in a real build. Expo Go still opens Expo Go and
+  needs your dev server running (or a published update) to load. See [docs/ios-build.md](docs/ios-build.md) for the
+  iPhone build steps.
 - If registering a push token ever fails in Expo Go, the fallback is a development build, which needs an
   Apple Developer account on iOS.
 - Run the server's tests with `cd server && npm test`.
