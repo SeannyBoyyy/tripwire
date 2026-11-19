@@ -91,7 +91,8 @@ Things to know:
   so that is the default. Every minute is about 43,000, which needs a paid plan or a different price feed
   (`fetchPrices` in `server/src/core.ts` is the one place to change). Put the Demo key on the server only
   and leave the app keyless, so the two don't share the quota.
-- **The key in `.env` ships inside the app.** It keeps strangers from using your Worker; it isn't a real secret.
+- **The key in `.env` ships inside the app, and inside any update you publish.** Treat it as public. It only
+  deters casual use of your Worker; it isn't a real secret.
 - **Tapping the notification** opens Tripwire on the Tripwires tab in a real build. Expo Go still opens Expo Go and
   needs your dev server running (or a published update) to load. See [docs/ios-build.md](docs/ios-build.md) for the
   iPhone build steps.
@@ -173,8 +174,10 @@ Tripwire is not financial advice.
 
 ## Rate limits (app)
 
-CoinGecko's keyless access is rate limited and meant for light use. A free Demo key is steadier: put it in
-`.env` as `EXPO_PUBLIC_COINGECKO_KEY`. Keep `POLL_MS` at a minute or more.
+CoinGecko's keyless access is rate limited and meant for light use. A free Demo key is steadier. If you run the
+Worker, give the key to the Worker only (`npx wrangler secret put COINGECKO_KEY`) and leave the app keyless, so
+the two don't share the quota. Without the Worker, put it in `.env` as `EXPO_PUBLIC_COINGECKO_KEY`; it then
+ships inside the app, so treat it as public. Keep `POLL_MS` at a minute or more.
 
 ## Layout
 
