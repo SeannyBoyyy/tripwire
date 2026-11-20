@@ -14,10 +14,10 @@ on the Tripwires tab. Alerts themselves already work without it; this is only ab
 
 PowerShell, in the project root.
 
-**1. Give the app its own id.** The placeholder `com.example.tripwire` can't be registered. Pick one that is yours:
+**1. Give the app its own id.** `app.json` ships with the original author's id, which you can't register. Pick one that is yours:
 
 ```powershell
-(Get-Content app.json) -replace 'com.example.tripwire','com.yourname.tripwire' | Set-Content app.json
+(Get-Content app.json) -replace 'com.seannyboyy.tripwire','com.yourname.tripwire' | Set-Content app.json
 ```
 
 **2. Hand the build your server address and key.** EAS builds don't see your `.env` (it is gitignored), so store the

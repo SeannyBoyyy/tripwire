@@ -35,8 +35,9 @@ Developer account involved (Expo Go on Android can't receive remote push since S
 
 The server is in `server/`: a Cloudflare Worker with a cron schedule and a D1 database.
 
-**1. Give the app an EAS project ID.** Free, and it must be the Expo account Expo Go is signed in to. It will
-ask you to sign in, then writes the ID into `app.json`:
+**1. Give the app an EAS project ID.** Free, and it must be the Expo account Expo Go is signed in to. If you
+cloned this repo, first delete the original author's `owner`, `extra.eas.projectId` and `updates` entries from
+`app.json`. The command below asks you to sign in, then writes your own ID into `app.json`:
 
 ```bash
 npx eas-cli init
@@ -201,4 +202,9 @@ server/                           Cloudflare Worker: sync endpoint, cron price c
 .github/workflows/ci.yml          typecheck + tests for both packages
 ```
 
-Change `com.example.tripwire` in `app.json` before building for a device or the stores.
+Before building for a device or the stores, change the bundle ID (`ios.bundleIdentifier`) and package name
+(`android.package`) in `app.json` to your own.
+
+## License
+
+[MIT](LICENSE). CoinGecko's data has its own terms; see the note above.
