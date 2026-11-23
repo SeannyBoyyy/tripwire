@@ -108,7 +108,7 @@ Nothing, for personal use. Everything runs on free tiers:
 | Piece | Free allowance | What Tripwire uses |
 | --- | --- | --- |
 | Cloudflare Workers | 100,000 requests a day, 10 ms CPU per request, 5 cron triggers per account | about 290 checks a day, plus one request a minute while the app is open |
-| Cloudflare D1 | 5 million rows read and 100,000 rows written a day | a handful of rows per check |
+| Cloudflare D1 | 5 million rows read and 100,000 rows written a day | a handful of rows per check; a sync writes nothing unless a wire changed |
 | CoinGecko Demo plan | 10,000 calls a month | about 8,600 a month at one check every 5 minutes |
 | Expo account | free (needed for the project ID) | one project |
 
@@ -125,6 +125,9 @@ and [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/).
 | Closed, no server | A background task (`expo-background-task`) re-checks the armed coins when the OS lets it: at most every 15 minutes on Android, rarely on iOS, and with no promise at all after a force-quit. Not reliable in Expo Go. |
 
 A check compares the *latest price*, so a dip that comes and goes between two checks can be missed.
+
+You can have up to 40 armed tripwires at a time. Each sync to the server carries them plus your newest tripped
+ones, up to the server's limit of 50.
 
 ## Design notes
 

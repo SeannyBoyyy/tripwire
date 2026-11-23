@@ -210,6 +210,8 @@ export async function sendTestPush(token: string, fetchFn: typeof fetch): Promis
  * Makes the server's copy of one device match the app's: wires the app no
  * longer has are removed, new ones are added, and a trip is never undone from
  * either side. Everything runs as one batch, so it applies fully or not at all.
+ * The app syncs every minute while it is open, so a sync that changes nothing
+ * must write nothing: an existing wire is only touched to record a trip.
  */
 export async function syncDevice(db: D1Database, token: string, wires: WireIn[]): Promise<ServerWire[]> {
   const ids = wires.map((w) => w.id);
@@ -229,10 +231,12 @@ export async function syncDevice(db: D1Database, token: string, wires: WireIn[])
              (id, token, coin_id, symbol, name, direction, target, start_price, created_at, status, tripped_at, tripped_price)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
-             status = CASE WHEN tripwires.status = 'tripped' OR excluded.status = 'tripped' THEN 'tripped' ELSE 'armed' END,
+             status = 'tripped',
              tripped_at = COALESCE(tripwires.tripped_at, excluded.tripped_at),
              tripped_price = COALESCE(tripwires.tripped_price, excluded.tripped_price)
-           WHERE tripwires.token = excluded.token`,
+           WHERE tripwires.token = excluded.token
+             AND tripwires.status = 'armed'
+             AND excluded.status = 'tripped'`,
         )
         .bind(
           w.id,

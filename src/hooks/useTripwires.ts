@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
+import { MAX_ARMED } from '../domain/rules';
 import { loadTripwires, updateTripwires } from '../services/storage';
 import type { NewTripwire, Tripwire } from '../domain/types';
 
@@ -8,7 +9,13 @@ const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slic
 export function useTripwires() {
   const [all, setAll] = useState<Tripwire[]>([]);
 
-  const reload = useCallback(async () => setAll(await loadTripwires()), []);
+  const reload = useCallback(async () => {
+    try {
+      setAll(await loadTripwires());
+    } catch {
+      // Couldn't read the saved list. Keep what is on screen; nothing is lost, and the next reload tries again.
+    }
+  }, []);
 
   useEffect(() => {
     reload();
@@ -19,13 +26,16 @@ export function useTripwires() {
     return () => sub.remove();
   }, [reload]);
 
-  const arm = useCallback(async (wire: NewTripwire) => {
-    setAll(
-      await updateTripwires((list) => [
-        { ...wire, id: newId(), createdAt: Date.now(), status: 'armed' },
-        ...list,
-      ]),
+  /** Resolves false, and adds nothing, when MAX_ARMED wires are already armed. */
+  const arm = useCallback(async (wire: NewTripwire): Promise<boolean> => {
+    const id = newId();
+    const next = await updateTripwires((list) =>
+      list.filter((t) => t.status === 'armed').length >= MAX_ARMED
+        ? list
+        : [{ ...wire, id, createdAt: Date.now(), status: 'armed' }, ...list],
     );
+    setAll(next);
+    return next.some((t) => t.id === id);
   }, []);
 
   const remove = useCallback(async (id: string) => {

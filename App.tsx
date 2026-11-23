@@ -26,9 +26,14 @@ import {
 } from './src/services/notify';
 import { serverConfigured, syncWithServer, type ServerState } from './src/services/sync';
 import { ThemeProvider, useStyles, useTheme, type Palette } from './src/theme';
+import { MAX_ARMED } from './src/domain/rules';
 import type { Coin, NewTripwire, PriceMap } from './src/domain/types';
 import { useMarket } from './src/hooks/useMarket';
 import { useTripwires } from './src/hooks/useTripwires';
+
+// A storage problem must never fail silently, and must never change the saved list.
+const saveFailed = () =>
+  Alert.alert('Couldn’t save that', 'Tripwire changed nothing. Close and reopen it, then try again.');
 
 function Root() {
   const styles = useStyles(createStyles);
@@ -51,11 +56,17 @@ function Root() {
   // Every fresh price list is checked against the armed wires.
   const onPrices = useCallback(
     async (prices: PriceMap) => {
-      await reconcile(); // first, so a wire the server already fired isn't fired again here
-      const fired = await evaluateTripwires(prices);
-      if (fired.length > 0) {
-        await reload();
-        void reconcile(); // tell the server, so it never pushes a wire this phone handled
+      try {
+        await reconcile(); // first, so a wire the server already fired isn't fired again here
+        const fired = await evaluateTripwires(prices);
+        if (fired.length > 0) {
+          await reload();
+          void reconcile(); // tell the server, so it never pushes a wire this phone handled
+        }
+      } catch {
+        // The saved list couldn't be read or written this round and nothing was changed.
+        // The next price check tries again; reload in case the list reads fine now.
+        void reload();
       }
     },
     [reconcile, reload],
@@ -101,7 +112,15 @@ function Root() {
 
   const onArm = useCallback(
     async (wire: NewTripwire) => {
-      await arm(wire);
+      try {
+        if (!(await arm(wire))) {
+          Alert.alert('Limit reached', `Tripwire can watch ${MAX_ARMED} at a time. Disarm one to add another.`);
+          return;
+        }
+      } catch {
+        saveFailed();
+        return;
+      }
       await ensureAllowed(); // before the first sync: the push token needs permission
       void reconcile();
     },
@@ -110,14 +129,24 @@ function Root() {
 
   const onRemove = useCallback(
     async (id: string) => {
-      await remove(id);
+      try {
+        await remove(id);
+      } catch {
+        saveFailed();
+        return;
+      }
       void reconcile();
     },
     [remove, reconcile],
   );
 
   const onClearTripped = useCallback(async () => {
-    await clearTripped();
+    try {
+      await clearTripped();
+    } catch {
+      saveFailed();
+      return;
+    }
     void reconcile();
   }, [clearTripped, reconcile]);
 
@@ -154,7 +183,7 @@ function Root() {
       </BlurTargetView>
 
       <FloatingTabs tab={tab} armedCount={armed.length} onChange={setTab} blurTarget={blurTarget} />
-      <TripwireSheet coin={picked} onClose={() => setPicked(null)} onArm={onArm} />
+      <TripwireSheet coin={picked} armedCount={armed.length} onClose={() => setPicked(null)} onArm={onArm} />
     </View>
   );
 }

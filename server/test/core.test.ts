@@ -146,6 +146,19 @@ describe('syncDevice', () => {
     assert.equal(row.token, TOKEN_A);
     assert.equal(row.status, 'armed');
   });
+
+  it('writes nothing when nothing changed, and one row for a reported trip', async () => {
+    const { db, rows } = fakeD1();
+    // The app syncs every minute while it is open, and D1's free plan caps rows written per day.
+    const written = () => Number(rows('SELECT total_changes() AS n')[0].n);
+    const list = [wire({ id: 'a' }), wire({ id: 'b' })] as any;
+    await syncDevice(db, TOKEN_A, list);
+    const before = written();
+    await syncDevice(db, TOKEN_A, list);
+    assert.equal(written(), before, 'a repeat sync writes nothing');
+    await syncDevice(db, TOKEN_A, [wire({ id: 'a' }), wire({ id: 'b', status: 'tripped', trippedAt: 9, trippedPrice: 71000 })] as any);
+    assert.equal(written() - before, 1, 'a reported trip writes one row');
+  });
 });
 
 describe('runTick', () => {

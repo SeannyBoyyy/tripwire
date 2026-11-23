@@ -4,6 +4,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimension
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Keypad } from './Keypad';
 import { applyKey, fmtPrice, fmtTarget, groupDigits, parseTarget, roundNice, toInput, type KeyId } from '../domain/format';
+import { MAX_ARMED } from '../domain/rules';
 import { fonts, gutter, hairline, useStyles, useTheme, type Palette } from '../theme';
 import type { Coin, Direction, NewTripwire } from '../domain/types';
 import { Segmented, Sparkline } from './ui';
@@ -16,7 +17,10 @@ const DIRECTIONS = [
 
 type Verdict = { ok: boolean; warn: boolean; note: string };
 
-function judge(direction: Direction, target: number | null, coin: Coin): Verdict {
+function judge(direction: Direction, target: number | null, coin: Coin, armedCount: number): Verdict {
+  if (armedCount >= MAX_ARMED) {
+    return { ok: false, warn: true, note: `Tripwire can watch ${MAX_ARMED} at a time. Disarm one to add another.` };
+  }
   if (target === null) {
     return { ok: false, warn: false, note: 'Enter a target in USD, or pick a distance below.' };
   }
@@ -58,16 +62,28 @@ function Caret() {
 
 type Props = {
   coin: Coin | null;
+  /** How many wires are armed right now; the sheet won't arm past MAX_ARMED. */
+  armedCount: number;
   onClose: () => void;
   onArm: (wire: NewTripwire) => void;
 };
 
-export function TripwireSheet({ coin, onClose, onArm }: Props) {
+export function TripwireSheet({ coin, armedCount, onClose, onArm }: Props) {
   // Keyed by coin so every open starts from a clean form.
-  return coin ? <Sheet key={coin.id} coin={coin} onClose={onClose} onArm={onArm} /> : null;
+  return coin ? <Sheet key={coin.id} coin={coin} armedCount={armedCount} onClose={onClose} onArm={onArm} /> : null;
 }
 
-function Sheet({ coin, onClose, onArm }: { coin: Coin; onClose: () => void; onArm: Props['onArm'] }) {
+function Sheet({
+  coin,
+  armedCount,
+  onClose,
+  onArm,
+}: {
+  coin: Coin;
+  armedCount: number;
+  onClose: () => void;
+  onArm: Props['onArm'];
+}) {
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -99,7 +115,7 @@ function Sheet({ coin, onClose, onArm }: { coin: Coin; onClose: () => void; onAr
 
   const below = direction === 'below';
   const target = parseTarget(raw);
-  const verdict = useMemo(() => judge(direction, target, coin), [direction, target, coin]);
+  const verdict = useMemo(() => judge(direction, target, coin, armedCount), [direction, target, coin, armedCount]);
   const weekUp = coin.spark.length > 1 ? coin.spark[coin.spark.length - 1] >= coin.spark[0] : true;
   const suggestion = toInput(roundNice(coin.price * (below ? 0.97 : 1.03)));
 

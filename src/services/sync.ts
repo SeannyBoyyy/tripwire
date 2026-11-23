@@ -1,4 +1,5 @@
-import { applyServerTrips } from '../domain/merge';
+import { applyServerTrips, selectForSync } from '../domain/merge';
+import { SYNC_LIMIT } from '../domain/rules';
 import { getPushToken, notificationsAllowed } from './notify';
 import { loadTripwires, updateTripwires } from './storage';
 import type { ServerWire } from '../domain/types';
@@ -42,7 +43,8 @@ async function run(): Promise<SyncResult> {
     const local = await loadTripwires();
     const { tripwires } = await post<{ tripwires: ServerWire[] }>('/v1/sync', {
       token: push.token,
-      tripwires: local,
+      // The server takes at most SYNC_LIMIT wires. Armed ones always go; only the oldest trips stay behind.
+      tripwires: selectForSync(local, SYNC_LIMIT),
     });
     const changed = applyServerTrips(local, tripwires) !== local;
     if (changed) await updateTripwires((list) => applyServerTrips(list, tripwires));

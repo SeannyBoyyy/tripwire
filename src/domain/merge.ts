@@ -23,3 +23,18 @@ export function applyServerTrips(local: Tripwire[], remote: ServerWire[]): Tripw
   });
   return changed ? next : local;
 }
+
+/**
+ * The wires to send the server: every armed one first, then the newest trips that still fit.
+ * Older trips are left out, which is safe. A trip is final, and the server only needs the
+ * recent ones so it never pushes a wire this phone already fired. Returns the same array when
+ * everything fits.
+ */
+export function selectForSync(local: Tripwire[], limit: number): Tripwire[] {
+  if (local.length <= limit) return local;
+  const armed = local.filter((t) => t.status === 'armed');
+  const tripped = local
+    .filter((t) => t.status === 'tripped')
+    .sort((a, b) => (b.trippedAt ?? 0) - (a.trippedAt ?? 0));
+  return [...armed, ...tripped].slice(0, limit);
+}
